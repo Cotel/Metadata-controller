@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using iTextSharp.text.pdf;
+using System.Reflection;
 
 namespace PruebaMetadatos
 {
@@ -17,6 +19,8 @@ namespace PruebaMetadatos
     {
         OpenFileDialog data = new OpenFileDialog();
         Boolean open = false;
+        Boolean modeI = true;
+        Boolean modeD = false;
 
         public Form1()
         {
@@ -26,28 +30,55 @@ namespace PruebaMetadatos
 
         private void button1_Click(object sender, EventArgs e)
         {
-            data.Title = "Open First Image File";
-            data.InitialDirectory = "@C:\\";
-            data.Filter = "Image files (*.jpg; *.gif; *png)|*.jpg;*.jpeg;*.png;*.gif|All files (*.*)|*.*";
-            data.FilterIndex = 1;
-            data.RestoreDirectory = true;
-
-            if (data.ShowDialog() == DialogResult.OK)
+            if (modeI)
             {
-                try
-                {
-                    pictureBox1.Load(data.FileName);
-                    open = true;
-                }
-                catch
-                {
-                    MessageBox.Show("That file is not an image!", "File format exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                data.Title = "Open Image File";
+                data.InitialDirectory = "@C:\\";
+                data.Filter = "Image files (*.jpg; *.gif; *png)|*.jpg;*.jpeg;*.png;*.gif|All files (*.*)|*.*";
+                data.FilterIndex = 1;
+                data.RestoreDirectory = true;
 
+                if (data.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        pictureBox1.Load(data.FileName);
+                        open = true;
+                    }
+                    catch
+                    {
+                        MessageBox.Show("That file is not an image!", "File format exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+
+                }
+            }
+            else if (modeD)
+            {
+                data.Title = "Open PDF File";
+                data.InitialDirectory = "@C:\\";
+                data.Filter = "PDF files (*.pdf)|*.pdf";
+                data.FilterIndex = 1;
+                data.RestoreDirectory = true;
+
+                if (data.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        pictureBox1.Image = (Properties.Resources.PDF_2);
+                        pictureBox1.Refresh();
+                        open = true;
+                    }
+                    catch
+                    {
+                        MessageBox.Show("That file is not a PDF!", "File format exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    
+                }
+                
             }
         }
 
-        public void meta()
+        private void metaI()
         {
             Bitmap image = new Bitmap(@data.FileName);
             PropertyItem[] propItems = image.PropertyItems;
@@ -137,94 +168,140 @@ namespace PruebaMetadatos
             image.Dispose();
         }
 
-        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        private void metaD()
         {
+            listBox1.Items.Add(data.SafeFileName);
+            PdfReader pdfFile = new PdfReader(data.FileName);
+            IDictionary<String, String> metadic = pdfFile.Info;
+            var dic = from m in metadic select m;
+            foreach (var d in dic)
+            {
+                listBox2.Items.Add(d.Key + ": " + d.Value);
+            }
+            pdfFile.Close();
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            listBox2.Items.Clear();
-            listBox1.Items.Clear();
-            meta();
+            if (open)
+            {
+                listBox2.Items.Clear();
+                listBox1.Items.Clear();
+                if (modeI)
+                {
+                    metaI();
+                }
+                else
+                {
+                    metaD();
+                }
+            }
+            
         }
-
-        //public Stream PatchAwayExif(Stream inStream, Stream outStream)
-        //{
-        //    byte[] jpegHeader = new byte[2];
-        //    jpegHeader[0] = (byte)inStream.ReadByte();
-        //    jpegHeader[1] = (byte)inStream.ReadByte();
-        //    if (jpegHeader[0] == 0xff && jpegHeader[1] == 0xd8)
-        //    {
-        //        SkipAppHeaderSection(inStream);
-        //    }
-        //    outStream.WriteByte(0xff);
-        //    outStream.WriteByte(0xd8);
-
-        //    int readCount;
-        //    byte[] readBuffer = new byte[4096];
-        //    while ((readCount = inStream.Read(readBuffer, 0, readBuffer.Length)) > 0){
-        //        outStream.Write(readBuffer, 0, readCount);
-        //    }
-        //    return outStream;
-        //}
-
-        //private void SkipAppHeaderSection(Stream inStream)
-        //{
-        //    byte[] header = new byte[2];
-        //    header[0] = (byte)inStream.ReadByte();
-        //    header[1] = (byte)inStream.ReadByte();
-
-        //    while (header[0] == 0xff && (header[1] >= 0xe0 && header[1] <= 0xef))
-        //    {
-        //        int exifLength = inStream.ReadByte();
-        //        exifLength = exifLength << 8;
-        //        exifLength |= inStream.ReadByte();
-
-        //        for (int i = 0; i < exifLength - 2; i++)
-        //        {
-        //            inStream.ReadByte();
-        //        }
-        //        header[0] = (byte)inStream.ReadByte();
-        //        header[1] = (byte)inStream.ReadByte();
-        //    }
-        //    inStream.Position -= 2;
-
-        //}
 
         private void button3_Click(object sender, EventArgs e)
         {
+            SaveFileDialog saveFileDialog1 = new SaveFileDialog();
+
             if (open)
             {
-                SaveFileDialog saveFileDialog1 = new SaveFileDialog();
-                saveFileDialog1.Title = "Save an Image File";
-                saveFileDialog1.Filter = "Image files (*.jpg; *.gif; *png)|*.jpg;*.jpeg;*.png;*.gif|All files (*.*)|*.*";
-                saveFileDialog1.FilterIndex = 1;
-                saveFileDialog1.FileName = data.FileName;
-
-                Bitmap image = new Bitmap(data.FileName);
-                PropertyItem[] propItems = image.PropertyItems;
-
-                foreach (PropertyItem item in propItems)
+                if (modeI)
                 {
-                    if (item.Type == 2)
+                    
+                    saveFileDialog1.Title = "Save an Image File";
+                    saveFileDialog1.Filter = "Image files (*.jpg; *.gif; *png)|*.jpg;*.jpeg;*.png;*.gif|All files (*.*)|*.*";
+                    saveFileDialog1.FilterIndex = 1;
+                    saveFileDialog1.FileName = data.FileName;
+
+                    Bitmap image = new Bitmap(data.FileName);
+                    PropertyItem[] propItems = image.PropertyItems;
+
+                    foreach (PropertyItem item in propItems)
                     {
-                        image.RemovePropertyItem(item.Id);
+                        if (item.Type == 2)
+                        {
+                            image.RemovePropertyItem(item.Id);
+                        }
+                    }
+
+                    if (saveFileDialog1.ShowDialog() == DialogResult.OK && saveFileDialog1.FileName != "")
+                    {
+                        if (saveFileDialog1.FileName == data.FileName)
+                        {
+                            MessageBox.Show("For security reasons I can't overwrite!", "Overwrite not allowed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                        else
+                        {
+                            image.Save(saveFileDialog1.FileName);
+                        }
+                    }
+                    image.Dispose();
+                }
+                else if (modeD)
+                {
+                    saveFileDialog1.Title = "Save a PDF File";
+                    saveFileDialog1.Filter = "PDF files (*.pdf)|*.pdf";
+                    saveFileDialog1.FilterIndex = 1;
+                    saveFileDialog1.FileName = data.FileName;
+
+                    if (saveFileDialog1.ShowDialog() == DialogResult.OK && saveFileDialog1.FileName != "")
+                    {
+                        if (saveFileDialog1.FileName == data.FileName)
+                        {
+                            MessageBox.Show("For security reasons I can't overwrite!", "Overwrite not allowed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                        else
+                        {
+                            PdfReader reader = new PdfReader(data.FileName);
+                            PdfStamper stamper = new PdfStamper(reader,
+                                new FileStream(saveFileDialog1.FileName, FileMode.Create));
+                            IDictionary<String, String> inf = reader.Info;
+                            SortedDictionary<String, String> res = new SortedDictionary<String,String>();
+                            var dic = from m in inf select m;
+                            foreach (var d in dic)
+                            {
+                                res.Add(d.Key, "");
+                            }
+
+
+                            //inf.Add("Title", "");
+                            //inf.Add("Subject", "");
+                            //inf.Add("Author", "");
+                            //inf.Add("Creator", "");
+                            //inf.Add("Producer", "");
+                            //inf.Add("ModData", "");
+                            //inf.Add("Keywords", "");
+
+                            stamper.MoreInfo = res;
+                            stamper.Close();
+                            reader.Close();
+                        }
                     }
                 }
-
-                if (saveFileDialog1.ShowDialog() == DialogResult.OK && saveFileDialog1.FileName != "")
-                {
-                    if (saveFileDialog1.FileName == data.FileName)
-                    {
-                        MessageBox.Show("For security reasons I can't overwrite!", "Overwrite not allowed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                    else
-                    {
-                        image.Save(saveFileDialog1.FileName);
-                    }
-                }
-                image.Dispose();
             }
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            modeI = true;
+            modeD = false;
+            open = false;
+            pictureBox1.Image = null;
+            pictureBox1.Refresh();
+            listBox2.Items.Clear();
+            listBox1.Items.Clear();
+            listBox2.Items.Add("Load an Image File to begin...");
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            modeI = false;
+            modeD = true;
+            open = false;
+            pictureBox1.Refresh();
+            listBox2.Items.Clear();
+            listBox1.Items.Clear();
+            listBox2.Items.Add("Load a PDF File to begin...");
         }
     }
 }
