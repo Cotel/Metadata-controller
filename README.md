@@ -9,6 +9,7 @@ Simple tool developed in C# to see Images and PDF documents metadata and erase i
 **Still in development**
 
 While I finish you can compile and execute the application by opening ```PruebaMetadatos.sln``` with Visual Studio.
+Or you can download the installer of my last build [here](https://dl.dropboxusercontent.com/u/27944902/MetadataController.zip) but I don't know if it will work with you (I'm just a noob with Visual Studio :P)
 
 
 Developed by Miguel Coleto, 2015.
